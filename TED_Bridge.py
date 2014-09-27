@@ -82,6 +82,27 @@ def post_data(data):
 		print "failure"
 
 
+def auth_buddy_device():	
+	global buddy_base_url
+	buddy_base_url = "https://api.buddyplatform.com"
+	app_id = "bbbbbc.DzfbbNjLvrKg"
+	app_key = "BA08AFCE-E0E4-425B-9638-82D3D2BA4C7E"
+	auth_json = {appId: app_id, appKey: app_key}
+	r = requests.post(buddy_base_url+ "/devices", data=json.dumps(auth_json))	
+	print(r.json())	
+	return
+
+
+def post_telemetry_to_buddy(data):
+	if device_token is None:
+		auth_buddy_device()
+	requests.post(buddy_base_url + "/devices")
+	return
+
+def auth_buddy_user():
+	return
+
+
 if __name__ == "__main__":
 	import time
 	while(True):
@@ -90,6 +111,7 @@ if __name__ == "__main__":
 			datapoints = parse_ted_response(fetched_data)
 			datapoints = remove_already_posted_data(datapoints)
 			post_data(format_data_to_post(datapoints))
+			post_telemetry_to_buddy(datapoints)
 			time.sleep(2)
 		except Exception, error: 
 			print "error: " + error
