@@ -91,7 +91,6 @@ class Buddy_Client(object):
 	def auth_buddy_device(self):	
 		auth_json = {'appId': self.app_id, 'appKey': self.app_key, 'platform': 'TED_Device'}
 		try:
-			print "auth it!"
 			r = requests.post(self.base_url + "/devices", data=auth_json)	
 			self.device_token = json.loads(r.content)['result']['accessToken']
 		except Exception, error:
@@ -100,14 +99,14 @@ class Buddy_Client(object):
 		return
 
 
-	def post_telemetry_to_buddy(self, data1):	
+	def post_telemetry_to_buddy(self, data):	
 		if self.device_token is None:
 			self.auth_buddy_device()
 		try:
-			print "post telem"
-			headers = {'Authorization': 'Buddy ' + self.device_token}
-			r = requests.post(self.base_url + "/devices", headers: headers)
-			print json.loads(r.content)['result']
+			heads = {"Authorization": "Buddy " + self.device_token}
+				
+			r = requests.post(self.base_url + '/telemetry/telegesis', data={'data':json.dumps(data[0])}, headers=heads)
+			print json.loads(r.content)
 		except Exception, error:
 			print Exception, error	
 
@@ -125,15 +124,12 @@ if __name__ == "__main__":
 
 	while(True):
 		try:
-			print "fetch it!"
 			fetched_data = fetch_data()
 			datapoints = parse_ted_response(fetched_data)
 			datapoints = remove_already_posted_data(datapoints)
-			print "post"
-			post_data(format_data_to_post(datapoints))
-			print "about to telem"
-			buddy_client.post_telemetry_to_buddy(datapoints)
-			print "telemed"
+			formated_data = format_data_to_post(datapoints)
+			post_data(formated_data)
+			buddy_client.post_telemetry_to_buddy(formated_data)
 			time.sleep(2)
 		except Exception, error: 
 			print Exception, error
