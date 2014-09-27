@@ -81,37 +81,59 @@ def post_data(data):
 	else:
 		print "failure"
 
+class Buddy_Client(object):
+	def __init__(self, app_id, app_key):
+		self.app_id = app_id
+		self.app_key = app_key
+		self.base_url = "https://api.buddyplatform.com"	
+		self.device_token = None
 
-def auth_buddy_device():	
-	global buddy_base_url
-	buddy_base_url = "https://api.buddyplatform.com"
-	app_id = "bbbbbc.DzfbbNjLvrKg"
-	app_key = "BA08AFCE-E0E4-425B-9638-82D3D2BA4C7E"
-	auth_json = {appId: app_id, appKey: app_key}
-	r = requests.post(buddy_base_url+ "/devices", data=json.dumps(auth_json))	
-	print(r.json())	
-	return
+	def auth_buddy_device(self):	
+		auth_json = {'appId': self.app_id, 'appKey': self.app_key, 'platform': 'TED_Device'}
+		try:
+			print "auth it!"
+			r = requests.post(self.base_url + "/devices", data=auth_json)	
+			self.device_token = json.loads(r.content)['result']['accessToken']
+		except Exception, error:
+			print Exception, error
+
+		return
 
 
-def post_telemetry_to_buddy(data):
-	if device_token is None:
-		auth_buddy_device()
-	requests.post(buddy_base_url + "/devices")
-	return
+	def post_telemetry_to_buddy(self, data1):	
+		if self.device_token is None:
+			self.auth_buddy_device()
+		try:
+			print "post telem"
+			headers = {'Authorization': 'Buddy ' + self.device_token}
+			r = requests.post(self.base_url + "/devices", headers: headers)
+			print json.loads(r.content)['result']
+		except Exception, error:
+			print Exception, error	
 
-def auth_buddy_user():
-	return
+		return
+
+
+	def auth_buddy_user(self):
+		return
 
 
 if __name__ == "__main__":
 	import time
+	import json
+	buddy_client = Buddy_Client("bbbbbc.nKkbbrlMMFws", "72F2E61F-CE5F-498B-9E97-EDBF7EDE9BA6")
+
 	while(True):
 		try:
+			print "fetch it!"
 			fetched_data = fetch_data()
 			datapoints = parse_ted_response(fetched_data)
 			datapoints = remove_already_posted_data(datapoints)
+			print "post"
 			post_data(format_data_to_post(datapoints))
-			post_telemetry_to_buddy(datapoints)
+			print "about to telem"
+			buddy_client.post_telemetry_to_buddy(datapoints)
+			print "telemed"
 			time.sleep(2)
 		except Exception, error: 
-			print "error: " + error
+			print Exception, error
